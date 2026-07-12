@@ -126,6 +126,7 @@ struct oplus_adfr_params {
 	bool need_filter_auto_on_cmd;					/* indicates whether auto on cmds need to be filtered if auto off cmds have been sent within one frame or not */
 	unsigned int sa_min_fps;						/* the minimum self-refresh rate when no image would be sent to ddic in sa mode */
 	bool sa_min_fps_updated;						/* indicates whether sa min fps is updated or not */
+	unsigned int user_min_fps;						/* userspace requested sa min fps, 0:auto (lowest table entry), clamped into the current timing's table otherwise */
 	bool skip_min_fps_setting;						/* indicates whether min fps setting should be skipped or not */
 	unsigned int sw_fps;							/* software vsync value */
 	struct pinctrl_state *te1_active;				/* a pinctrl state used to control te1 active */
@@ -226,6 +227,8 @@ int oplus_adfr_set_min_fps_updated(void *dsi_panel);
 int oplus_adfr_sa_mode_restore(void *dsi_display);
 int oplus_adfr_sa_handle(void *sde_encoder_virt);
 int oplus_adfr_status_reset(void *dsi_panel);
+int oplus_adfr_hbm_min_fps_max(void *dsi_display);
+int oplus_adfr_hbm_min_fps_restore(void *dsi_panel);
 
 /* -------------------- high precision standard adfr -------------------- */
 int oplus_adfr_high_precision_handle(void *sde_enc_v);
@@ -267,6 +270,11 @@ bool oplus_adfr_is_oa_use_fixed_te_c(void *sde_connector);
 ssize_t oplus_adfr_set_config_attr(struct kobject *obj,
 	struct kobj_attribute *attr, const char *buf, size_t count);
 ssize_t oplus_adfr_get_config_attr(struct kobject *obj,
+	struct kobj_attribute *attr, char *buf);
+/* adfr_min_fps */
+ssize_t oplus_adfr_set_user_min_fps_attr(struct kobject *obj,
+	struct kobj_attribute *attr, const char *buf, size_t count);
+ssize_t oplus_adfr_get_user_min_fps_attr(struct kobject *obj,
 	struct kobj_attribute *attr, char *buf);
 /* test te */
 int oplus_adfr_set_test_te(void *buf);
