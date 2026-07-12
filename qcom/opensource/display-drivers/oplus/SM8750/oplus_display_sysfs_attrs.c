@@ -1218,6 +1218,13 @@ static ssize_t oplus_display_set_hbm_max_debug(struct kobject *obj,
 	}
 	OPLUS_DSI_INFO("Set hbm max, state=%d\n", hbm_max_state);
 
+#ifdef OPLUS_FEATURE_DISPLAY_ADFR
+	/* min fps cmds overwrite hbm registers, so freeze min fps at max while hbm max is active */
+	if (hbm_max_state) {
+		oplus_adfr_hbm_min_fps_max(display);
+	}
+#endif /* OPLUS_FEATURE_DISPLAY_ADFR */
+
 	mutex_lock(&display->display_lock);
 
 	if (hbm_max_state) {
@@ -1252,6 +1259,9 @@ static ssize_t oplus_display_set_hbm_max_debug(struct kobject *obj,
 		if (panel->oplus_panel.bl_cfg.hbm_max_exit_restore_gir) {
 			dsi_display_seed_mode_lock(get_main_display(), seed_mode);
 		}
+#ifdef OPLUS_FEATURE_DISPLAY_ADFR
+		oplus_adfr_hbm_min_fps_restore(panel);
+#endif /* OPLUS_FEATURE_DISPLAY_ADFR */
 	}
 
 	return count;
@@ -2762,6 +2772,7 @@ static OPLUS_ATTR(hbm_max, S_IRUGO | S_IWUSR, oplus_display_get_hbm_max_debug,
 		oplus_display_set_hbm_max_debug);
 #ifdef OPLUS_FEATURE_DISPLAY_ADFR
 static OPLUS_ATTR(adfr_config, S_IRUGO | S_IWUSR, oplus_adfr_get_config_attr, oplus_adfr_set_config_attr);
+static OPLUS_ATTR(adfr_min_fps, S_IRUGO | S_IWUSR, oplus_adfr_get_user_min_fps_attr, oplus_adfr_set_user_min_fps_attr);
 static OPLUS_ATTR(test_te, S_IRUGO | S_IWUSR, oplus_adfr_get_test_te_attr, oplus_adfr_set_test_te_attr);
 static OPLUS_ATTR(min_fps, S_IRUGO | S_IWUSR, oplus_adfr_get_min_fps_attr, oplus_adfr_set_min_fps_attr);
 #endif /* OPLUS_FEATURE_DISPLAY_ADFR */
@@ -2832,6 +2843,7 @@ static struct attribute *oplus_display_attrs[] = {
 	&oplus_attr_hbm_max.attr,
 #ifdef OPLUS_FEATURE_DISPLAY_ADFR
 	&oplus_attr_adfr_config.attr,
+	&oplus_attr_adfr_min_fps.attr,
 	&oplus_attr_test_te.attr,
 	&oplus_attr_min_fps.attr,
 #endif /* OPLUS_FEATURE_DISPLAY_ADFR */

@@ -6062,6 +6062,8 @@ int dsi_panel_switch(struct dsi_panel *panel)
 #endif /* OPLUS_FEATURE_DISPLAY_ADFR */
 
 #ifdef OPLUS_FEATURE_DISPLAY
+	oplus_panel_hbm_max_resend(panel);
+
 	if (oplus_display_ops.panel_switch_post) {
 		oplus_display_ops.panel_switch_post(panel);
 	}

@@ -10,6 +10,9 @@
 #include "oplus_display_device_ioctl.h"
 #include "oplus_display_device.h"
 #include "oplus_display_effect.h"
+#ifdef OPLUS_FEATURE_DISPLAY_ADFR
+#include "oplus_adfr.h"
+#endif /* OPLUS_FEATURE_DISPLAY_ADFR */
 #include <linux/notifier.h>
 #include <linux/soc/qcom/panel_event_notifier.h>
 #include "oplus_display_sysfs_attrs.h"
@@ -1886,6 +1889,13 @@ int oplus_display_panel_set_hbm_max(void *data)
 	}
 	OPLUS_DSI_INFO("Set hbm max state=%d\n", hbm_max_state);
 
+#ifdef OPLUS_FEATURE_DISPLAY_ADFR
+	/* min fps cmds overwrite hbm registers, so freeze min fps at max while hbm max is active */
+	if (hbm_max_state) {
+		oplus_adfr_hbm_min_fps_max(display);
+	}
+#endif /* OPLUS_FEATURE_DISPLAY_ADFR */
+
 	mutex_lock(&display->display_lock);
 
 	last_bl = oplus_last_backlight;
@@ -1920,7 +1930,42 @@ int oplus_display_panel_set_hbm_max(void *data)
 		if (panel->oplus_panel.bl_cfg.hbm_max_exit_restore_gir) {
 			dsi_display_seed_mode_lock(get_main_display(), seed_mode);
 		}
+#ifdef OPLUS_FEATURE_DISPLAY_ADFR
+		oplus_adfr_hbm_min_fps_restore(panel);
+#endif /* OPLUS_FEATURE_DISPLAY_ADFR */
 	}
+
+	return rc;
+}
+
+/*
+ hbm max cmds are defined per timing node and timing switch cmds reprogram
+ panel registers, so re-latch hbm max after a timing switch if it is active.
+ must be called with panel_lock held.
+*/
+int oplus_panel_hbm_max_resend(struct dsi_panel *panel)
+{
+	int rc = 0;
+
+	if (!panel || !panel->cur_mode || !panel->cur_mode->priv_info) {
+		OPLUS_DSI_ERR("Invalid panel params\n");
+		return -EINVAL;
+	}
+
+	if (!panel->oplus_panel.hbm_max_state)
+		return 0;
+
+	if (!panel->cur_mode->priv_info->cmd_sets[DSI_CMD_HBM_MAX].count) {
+		OPLUS_DSI_WARN("DSI_CMD_HBM_MAX is undefined, can not resend it after timing switch\n");
+		return 0;
+	}
+
+	rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_HBM_MAX, false);
+	if (rc) {
+		OPLUS_DSI_ERR("failed to resend DSI_CMD_HBM_MAX after timing switch, rc=%d\n", rc);
+		return rc;
+	}
+	OPLUS_DSI_INFO("resend hbm max cmds after timing switch\n");
 
 	return rc;
 }
