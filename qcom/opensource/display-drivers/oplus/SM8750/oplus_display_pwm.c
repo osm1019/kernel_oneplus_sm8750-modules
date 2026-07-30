@@ -847,8 +847,7 @@ int oplus_panel_pwm_dbv_threshold_handle(struct dsi_panel *panel, u32 backlight_
 	 * on pmr_nalojr_l6. Tunable via oplus,pwm-dbv-hysteresis in panel DTSI;
 	 * defaults to 50 if not set.
 	 */
-	u32 hysteresis = panel->oplus_panel.pwm_params.pwm_dbv_hysteresis ?
-			panel->oplus_panel.pwm_params.pwm_dbv_hysteresis : 50;
+	u32 hysteresis;
 
 	bl_lvl = backlight_level;
 
@@ -856,6 +855,9 @@ int oplus_panel_pwm_dbv_threshold_handle(struct dsi_panel *panel, u32 backlight_
 		OPLUS_PWM_ERR("oplus_panel_pwm_dbv_threshold_switch Invalid panel params\n");
 		return -EINVAL;
 	}
+
+	hysteresis = panel->oplus_panel.pwm_params.pwm_dbv_hysteresis ?
+			panel->oplus_panel.pwm_params.pwm_dbv_hysteresis : 50;
 
 	if (panel->oplus_panel.pwm_params.pwm_hbm_state) {
 		OPLUS_PWM_INFO("panel pwm_hbm_state true disable pwm switch!\n");
