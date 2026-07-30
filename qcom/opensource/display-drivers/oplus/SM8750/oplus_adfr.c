@@ -4628,6 +4628,7 @@ ssize_t oplus_adfr_get_user_min_fps_attr(struct kobject *obj,
 int oplus_adfr_set_test_te(void *buf)
 {
 	unsigned int *test_te_config = buf;
+	unsigned int old_test_te_config = OPLUS_ADFR_TEST_TE_DISABLE;
 	unsigned int test_te_irq = 0;
 	struct dsi_display *display = oplus_display_get_current_display();
 	struct oplus_adfr_params *p_oplus_adfr_params = NULL;
@@ -4664,18 +4665,23 @@ int oplus_adfr_set_test_te(void *buf)
 
 	OPLUS_ADFR_TRACE_BEGIN("oplus_adfr_set_test_te");
 	if (p_oplus_adfr_params->test_te.config != *test_te_config) {
+		old_test_te_config = p_oplus_adfr_params->test_te.config;
 		p_oplus_adfr_params->test_te.config = *test_te_config;
 		global_test_te_config = p_oplus_adfr_params->test_te.config;
 		ADFR_INFO("oplus_adfr_test_te_config:%u\n", p_oplus_adfr_params->test_te.config);
 		OPLUS_ADFR_TRACE_INT("oplus_adfr_test_te_config", p_oplus_adfr_params->test_te.config);
 
-		test_te_irq = gpio_to_irq(p_oplus_adfr_params->test_te.gpio);
-		if (p_oplus_adfr_params->test_te.config != OPLUS_ADFR_TEST_TE_DISABLE) {
-			enable_irq(test_te_irq);
-			ADFR_INFO("enable test te irq\n");
-		} else {
-			disable_irq(test_te_irq);
-			ADFR_INFO("disable test te irq\n");
+		if ((p_oplus_adfr_params->test_te.gpio != display->disp_te_gpio) &&
+				((old_test_te_config == OPLUS_ADFR_TEST_TE_DISABLE) !=
+				(p_oplus_adfr_params->test_te.config == OPLUS_ADFR_TEST_TE_DISABLE))) {
+			test_te_irq = gpio_to_irq(p_oplus_adfr_params->test_te.gpio);
+			if (p_oplus_adfr_params->test_te.config != OPLUS_ADFR_TEST_TE_DISABLE) {
+				enable_irq(test_te_irq);
+				ADFR_INFO("enable test te irq\n");
+			} else {
+				disable_irq(test_te_irq);
+				ADFR_INFO("disable test te irq\n");
+			}
 		}
 	} else {
 		ADFR_INFO("do nothing while the value of test_te_config was not changed\n");
@@ -4746,6 +4752,7 @@ ssize_t oplus_adfr_set_test_te_attr(struct kobject *obj,
 	struct kobj_attribute *attr, const char *buf, size_t count)
 {
 	unsigned int test_te_config = OPLUS_ADFR_TEST_TE_DISABLE;
+	unsigned int old_test_te_config = OPLUS_ADFR_TEST_TE_DISABLE;
 	unsigned int test_te_irq = 0;
 	struct dsi_display *display = oplus_display_get_current_display();
 	struct oplus_adfr_params *p_oplus_adfr_params = NULL;
@@ -4784,18 +4791,23 @@ ssize_t oplus_adfr_set_test_te_attr(struct kobject *obj,
 
 	sscanf(buf, "%u", &test_te_config);
 
+	old_test_te_config = p_oplus_adfr_params->test_te.config;
 	p_oplus_adfr_params->test_te.config = test_te_config;
 	global_test_te_config = p_oplus_adfr_params->test_te.config;
 	ADFR_INFO("oplus_adfr_test_te_config:%u\n", p_oplus_adfr_params->test_te.config);
 	OPLUS_ADFR_TRACE_INT("oplus_adfr_test_te_config", p_oplus_adfr_params->test_te.config);
 
-	test_te_irq = gpio_to_irq(p_oplus_adfr_params->test_te.gpio);
-	if (p_oplus_adfr_params->test_te.config != OPLUS_ADFR_TEST_TE_DISABLE) {
-		enable_irq(test_te_irq);
-		ADFR_INFO("enable test te irq\n");
-	} else {
-		disable_irq(test_te_irq);
-		ADFR_INFO("disable test te irq\n");
+	if ((p_oplus_adfr_params->test_te.gpio != display->disp_te_gpio) &&
+			((old_test_te_config == OPLUS_ADFR_TEST_TE_DISABLE) !=
+			(p_oplus_adfr_params->test_te.config == OPLUS_ADFR_TEST_TE_DISABLE))) {
+		test_te_irq = gpio_to_irq(p_oplus_adfr_params->test_te.gpio);
+		if (p_oplus_adfr_params->test_te.config != OPLUS_ADFR_TEST_TE_DISABLE) {
+			enable_irq(test_te_irq);
+			ADFR_INFO("enable test te irq\n");
+		} else {
+			disable_irq(test_te_irq);
+			ADFR_INFO("disable test te irq\n");
+		}
 	}
 
 	OPLUS_ADFR_TRACE_END("oplus_adfr_set_test_te_attr");
