@@ -1917,10 +1917,14 @@ int oplus_display_panel_set_hbm_max(void *data)
 			mutex_lock(&panel->panel_lock);
 			rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_EXIT_HBM_MAX, false);
 			mutex_unlock(&panel->panel_lock);
-		} else {
-			rc = dsi_display_set_backlight(display->drm_conn,
-					display, last_bl);
 		}
+		/* DSI_CMD_EXIT_HBM_MAX only leaves HBM register mode; it does not
+		 * restore the pre-HBM backlight, so the panel would stay at the
+		 * normal max level (~4094) until the next framework brightness
+		 * update. Re-apply the saved backlight so the panel returns to
+		 * the user's slider brightness immediately. */
+		rc = dsi_display_set_backlight(display->drm_conn,
+				display, last_bl);
 	}
 	panel->oplus_panel.hbm_max_state = hbm_max_state;
 
