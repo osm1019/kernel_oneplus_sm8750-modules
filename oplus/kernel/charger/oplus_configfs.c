@@ -941,7 +941,7 @@ static ssize_t cool_down_store(struct device *dev, struct device_attribute *attr
 
 	return count;
 }
-static DEVICE_ATTR_RW(cool_down);
+static DEVICE_ATTR(cool_down, 0660, cool_down_show, cool_down_store);
 #endif /*CONFIG_OPLUS_SMART_CHARGER_SUPPORT*/
 
 static ssize_t em_mode_show(struct device *dev, struct device_attribute *attr, char *buf)
@@ -3978,6 +3978,13 @@ static int oplus_battery_dir_create(struct oplus_chg_chip *chip)
 			return err;
 		}
 	}
+
+	/*
+	 * device_create() already sent KOBJ_ADD before cool_down existed, so
+	 * ueventd's sysfs rule missed it. Re-emit CHANGE now that the attrs
+	 * are in place so cool_down becomes 0660 system:system.
+	 */
+	kobject_uevent(&oplus_battery_dir->kobj, KOBJ_CHANGE);
 
 	return 0;
 }

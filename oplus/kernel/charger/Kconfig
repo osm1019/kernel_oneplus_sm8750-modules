@@ -63,8 +63,10 @@ config OPLUS_CALL_MODE_SUPPORT
 
 config OPLUS_SMART_CHARGER_SUPPORT
 	bool "OPLUS smart charger support"
+	default y
 	help
-	  Say Y to include support
+	  Say Y to include support. Exposes /sys/class/oplus_chg/battery/cool_down
+	  for userspace USER_VOTER current caps (DeviceSettings SuperVOOC).
 
 config OPLUS_RTC_DET_SUPPORT
 	bool "OPLUS RTC DET SUPPORT"
